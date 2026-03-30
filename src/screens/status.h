@@ -1,0 +1,11 @@
+#pragma once
+enum Screen { SCR_STN,SCR_RAD, SCR_DIFF, SCR_ZEG, SCR_UST, SCR_NUFN };
+extern int cursor;
+void drawScreen(Screen prop);
+void drawScreenSTN();
+void drawScreenRAD();
+void drawScreenZEG();
+void drawScreenDIFF();
+void drawScreenUST();
+void load_sprites();
+void change_cursor(int d);
