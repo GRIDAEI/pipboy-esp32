@@ -39,8 +39,6 @@ void load_sprites(){
     sprite[0].createFromBmp(status_body);
     sprite[1].createFromBmp(FollowersApocalypseReputation);
     sprite[2].createFromBmp(radaxis);
-    
-    drawScreen(SCR_STN);
 }
 
 void change_cursor(int d){
