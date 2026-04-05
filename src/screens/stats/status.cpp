@@ -4,11 +4,11 @@
 #include "../data/monofonto_rg12pt7b.h"
 #include "../data/monofonto_rg13pt7b.h"
 #include "../data/monofonto_rg70pt7b.h"
-#include "../imgs/status_body.h"
-#include "../imgs/folow.h"
-#include "../imgs/radaxis.h"
-#include "rtc.h"
-#include "screens/special.h"
+#include "../../imgs/status_body.h"
+#include "../../imgs/folow.h"
+#include "../../imgs/radaxis.h"
+#include "modules/rtc.h"
+#include "special.h"
 
 
 int cursor = 0;

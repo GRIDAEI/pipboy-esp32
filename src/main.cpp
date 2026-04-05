@@ -7,8 +7,8 @@
 #include "config.h"
 #include <LittleFS.h>
 #include "imgs/pip.h"
-#include "audio.h"
-#include "rtc.h"
+#include "modules/audio.h"
+#include "modules/rtc.h"
 
 
 int upbtn =46;
@@ -60,7 +60,7 @@ void setup() {
   }
   load_all_sprites();
   
-  current_screen = Special;
+  current_screen = Special_Screen;
   Serial.println("Rysuje ekran");
   topbot();
   if (current_screen.drawFunction) {
@@ -74,12 +74,20 @@ void setup() {
   
 }
 void loop() {
-  handleAudio();
-  handleVibro();
+  //handleAudio();
+  //handleVibro();
 
   bool upNow = digitalRead(upbtn);
   bool downNow = digitalRead(downbtn);
 
+    if (Serial.available() > 0) {
+        char c = Serial.read();
+        if (c == 'w' || c == 'W') {
+            upNow = LOW;
+        } else if (c == 's' || c == 'S') {
+            downNow = LOW;
+        }
+    }
   
   if(upPrev == HIGH && upNow == LOW){
       current_up();
