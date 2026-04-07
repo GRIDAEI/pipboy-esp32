@@ -31,10 +31,11 @@ private:
     LGFX_Sprite sprite[6];
     const char* label[4] = {"STN", "RAD", "ZEG", "UST"};
     bool stn_edit;
-int temp_hp;
+    int temp_hp;
     int ust_cursor;
     bool ust_edit;
-    Screen current_selected;
+    Screen current_selected = SCR_STN;
+    Screen action_pool;
     char playerName[9]; // 8 liter + znak końca stringa '\0'
     int name_char_idx;  // Indeks aktualnie edytowanej litery (0-7)
     static const int SETTINGS_COUNT = 4;
@@ -53,7 +54,7 @@ public:
 
     // Metody publiczne
     void loadSprites();
-    void drawScreen(Screen prop);
+    void drawScreen();
     void changeCursor(int d);
     void statusSelect();
     int getCursor() const { return cursor; }

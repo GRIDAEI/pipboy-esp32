@@ -62,11 +62,11 @@ void setup() {
   }
   load_all_sprites();
   Serial.println("2");
-  current_screen = Status_Screen;
+  current_screen = &Status_Screen;
   Serial.println("Rysuje ekran");
   topbot();
-  if (current_screen.drawFunction) {
-      current_screen.drawFunction();
+  if (current_screen->drawFunction) {
+      current_screen->drawFunction();
   } else {
       Serial.println("BLAD: drawFunction jest PUSTE! Brakuje przypisania.");
   }
@@ -113,7 +113,7 @@ void loop() {
       playSound("/switch_opt.wav");
   }
   if(selectPrev == HIGH && selectNow == LOW){
-      current_select();
+      press_current_select();
       vibrate();
       playSound("/switch_opt.wav");
   }

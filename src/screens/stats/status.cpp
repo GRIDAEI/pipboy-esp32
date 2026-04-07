@@ -60,14 +60,15 @@ void Status::changeCursor(int d) {
         if (cursor > 3) cursor = 3;
 
         if (strcmp(label[cursor], "STN") == 0) {
-            drawScreen(SCR_STN);
+            current_selected = SCR_STN;
         } else if (strcmp(label[cursor], "RAD") == 0) {
-            drawScreen(SCR_RAD);
+            current_selected = SCR_RAD;
         } else if (strcmp(label[cursor], "ZEG") == 0) {
-            drawScreen(SCR_ZEG);
+            current_selected = SCR_ZEG;
         } else if (strcmp(label[cursor], "UST") == 0) {
-            drawScreen(SCR_UST);
+            current_selected = SCR_UST;
         }
+        drawScreen();
     }else if (current_selected == SCR_STN) {
         if (stn_edit) {
             temp_hp += (d * 5); // Zmieniaj HP o 5 punktów za każdym skokiem
@@ -112,21 +113,21 @@ void Status::changeCursor(int d) {
                 if (settings[ust_cursor].value > settings[ust_cursor].max_val) settings[ust_cursor].value = settings[ust_cursor].max_val;
             }
         }
-        drawScreen(SCR_UST);
+        drawScreen();
     }
 }
 
 // --- Logika rysowania głównego ekranu ---
-void Status::drawScreen(Screen prop) {
+void Status::drawScreen() {
     tft.fillRect(0, 50, 480, 250, COLOR_BG);
-
-    if (prop == SCR_STN) {
+    Serial.print("STATUS: Probuje Rysować");
+    if (current_selected == SCR_STN) {
         drawScreenSTN();
-    } else if (prop == SCR_RAD) {
+    } else if (current_selected == SCR_RAD) {
         drawScreenRAD();
-    } else if (prop == SCR_ZEG) {
+    } else if (current_selected == SCR_ZEG) {
         drawScreenZEG();
-    } else if (prop == SCR_UST) {
+    } else if (current_selected == SCR_UST) {
         drawScreenUST();
     }
 
@@ -309,30 +310,30 @@ void Status::drawScreenUST() {
 }
 
 void Status::statusSelect() {
-    if (current_selected == SCR_NUFN) {
-        if (strcmp(label[cursor], "UST") == 0) {
-            current_selected = SCR_UST;
+    if (action_pool == SCR_NUFN) {
+        if (current_selected == SCR_UST) {
+            action_pool = SCR_UST;
             ust_cursor = 0;
             ust_edit = false;
-            drawScreen(SCR_UST);
-        }else if (strcmp(label[cursor], "STN") == 0) {
+            drawScreen();
+        }else if (current_selected == SCR_STN) {
             // WEJŚCIE W EDYCJĘ HP
-            current_selected = SCR_STN;
+            action_pool = SCR_STN;
             stn_edit = true;
             temp_hp = player.hp; // Pobieramy aktualne HP na start edycji
-            drawScreen(SCR_STN);
+            drawScreen();
         }
-    } else if (current_selected == SCR_STN) {
+    } else if (action_pool == SCR_STN) {
         if (stn_edit) {
             stn_edit = false;            // Zakończ edycję
-            current_selected = SCR_NUFN; // Wróć sterowaniem do zakładek (TopBar)
+            action_pool = SCR_NUFN; // Wróć sterowaniem do zakładek (TopBar)
             player.hp = temp_hp;         // ZAPISZ NOWE HP!
             
             drawTopBar();                // Aktualizacja TopBaru (HP w tekście)
-            drawScreen(SCR_STN);         // Rysujemy ponownie STN, co teraz zaktualizuje minkę
+            drawScreen();         // Rysujemy ponownie STN, co teraz zaktualizuje minkę
         }
     }
-    else if (current_selected == SCR_UST) {
+    else if (action_pool == SCR_UST) {
         if (!ust_edit) {
             ust_edit = true; // Wchodzimy w tryb edycji
             if (ust_cursor == 0) {
@@ -354,6 +355,6 @@ void Status::statusSelect() {
                 ust_edit = false; // Dla reszty ustawień wyjdź z edycji normalnie
             }
         }
-        drawScreen(SCR_UST);
+        drawScreen();
     }
 }

@@ -14,8 +14,8 @@ void current_up();
 
 void current_down();
 void change_screen(int f);
-void current_select();
-extern AppScreen current_screen;
+void press_current_select();
+extern AppScreen* current_screen;
 extern AppScreen Status_Screen;
 extern AppScreen Special_Screen;
 extern AppScreen Skille_Screen;
