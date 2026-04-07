@@ -15,7 +15,6 @@ void initAudio() {
 
 void playSound(const char* name) {
     // Jeśli już gra — nie przerywaj
-    if (wav && wav->isRunning()) return;
 
     file = new AudioFileSourceLittleFS(name);
     if (!file->isOpen()) return;

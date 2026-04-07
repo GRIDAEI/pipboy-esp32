@@ -1,4 +1,3 @@
-#
 #include "topbar.h"
 #include "../config.h" 
 #include "display.h"
@@ -10,7 +9,8 @@ void drawBottomNav(int activeTab) {
   const int screenW = 480;
   const int navY = 295;
   const int tabW = screenW / tabCount;  // 96px każda zakładka
-    tft.setFont(&monofonto_rg7pt7b);
+  tft.fillRect(0,295,480,65,COLOR_BG);
+  tft.setFont(&monofonto_rg7pt7b);
   tft.drawLine(0, navY - 5, screenW, navY - 5, COLOR_GREEN);
 
   for (int i = 0; i < tabCount; i++) {

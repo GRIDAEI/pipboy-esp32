@@ -1,139 +1,230 @@
 #include "status.h"
-#include "display.h"
-#include <LittleFS.h>
-#include "../data/monofonto_rg12pt7b.h"
-#include "../data/monofonto_rg13pt7b.h"
-#include "../data/monofonto_rg70pt7b.h"
-#include "../../imgs/status_body.h"
-#include "../../imgs/folow.h"
-#include "../../imgs/radaxis.h"
-#include "modules/rtc.h"
-#include "special.h"
+#include "../topbar.h"
 
+// --- Konstruktor inicjalizujący domyślne wartości ---
+Status::Status() {
+    cursor = 0;
+    ust_cursor = 0;
+    ust_edit = false;
+    current_selected = SCR_NUFN;
+    stn_edit = false; // <--- NOWE: flaga edycji STN
+    temp_hp = player.hp;
+    // --- NOWE ZMIENNE DLA IMIENIA ---
+    strcpy(playerName, "VAULTBOY"); // Domyślne imię (max 8 znaków)
+    name_char_idx = 0;
 
-int cursor = 0;
-static LGFX_Sprite sprite[3];
-const char* label[4] = {"STN", "RAD", "ZEG", "UST"};
-static int ust_cursor = 0;     // która pozycja jest zaznaczona
-static bool ust_edit = false;  // czy jesteśmy w trybie edycji wartości
-
-Screen current_selected = SCR_NUFN;
-
-struct Setting {
-    const char* name;
-    int value;
-    int min_val;
-    int max_val;
-    const char* unit;
-};
-
-static Setting settings[] = {
-    { "JASNOSC",  80,  0, 100, "%" },
-    { "GLOSNOSC", 50,  0, 100, "%" },
-    { "KONTRAST", 70,  0, 100, "%" },
-    { "CZAS SYNC", 1,  0,   1, ""  },  // 0=OFF, 1=ON
-};
-static const int SETTINGS_COUNT = 4;
-
-void load_sprites(){
-    sprite[0].createFromBmp(status_body);
-    sprite[1].createFromBmp(FollowersApocalypseReputation);
-    sprite[2].createFromBmp(radaxis);
+    // Inicjalizacja tablicy ustawień (zmieniamy rozmiar na 6)
+    settings[0] = { "IMIE",       0, 0,   0, ""     }; // value ignorowane, używamy playerName
+    settings[1] = { "LEVEL",      1, 1, 100, ""     }; 
+    settings[2] = { "JASNOSC",   80, 0, 100, "%"    };
+    settings[3] = { "GLOSNOSC",  50, 0, 100, "%"    };
+    settings[4] = { "KONTRAST",  70, 0, 100, "%"    };
+    settings[5] = { "CZAS SYNC",  1, 0,   1, "BOOL" }; // Używamy "BOOL", aby łatwiej odróżnić ON/OFF od LEVEL
 }
 
-void change_cursor(int d){
+// --- Wczytywanie zasobów ---
+void Status::loadSprites() {
+    sprite[0].createFromBmp(statusBody);
+    // Pamiętaj, aby podać właściwe wymiary. Z pliku .h wynika, że to 60x60.
+    int width = 60;
+    int height = 60;
+    const uint16_t* b[] = { minka0, minka0,minka1, minka2, minka3, minka4 };
+    for(int i =1; i<6;i++){
+        sprite[i].setColorDepth(16);
+        sprite[i].createSprite(width, height);
+        sprite[i].setSwapBytes(true);
+        sprite[i].pushImage(0, 0, width, height, b[i]);
+    }
 
-
-    if (current_selected == SCR_NUFN)
+}
+void drawBar(int x,int y, int weight){
+    tft.fillRect(x,y,70,16, COLOR_BG);
+    tft.fillRect(x,y,70,16, COLOR_GREEN);
+    tft.fillRect(x+1,y+1,67,14, COLOR_BG);
+    tft.fillRect(x+2,y+2,64*weight/100,12, COLOR_GREEN);
+}
+void Status::drawThemAll(){
+    int weight = temp_hp * 100 / player.maxHp;
+    drawBar(205,50,weight);
+    drawBar(100,100,weight);
+    drawBar(310,100,weight);    
+    drawBar(110,210,weight);    
+    drawBar(300,210,weight);    
+}
+void Status::changeCursor(int d) {
+    if (current_selected == SCR_NUFN) {
         cursor += d;
-        if (label[cursor] == "STN"){
+        
+        // Zabezpieczenie przed wyjściem poza zakres (0 - 3)
+        if (cursor < 0) cursor = 0;
+        if (cursor > 3) cursor = 3;
+
+        if (strcmp(label[cursor], "STN") == 0) {
             drawScreen(SCR_STN);
-        }else if(label[cursor] == "RAD"){
+        } else if (strcmp(label[cursor], "RAD") == 0) {
             drawScreen(SCR_RAD);
-        }else if(label[cursor] == "ZEG"){
+        } else if (strcmp(label[cursor], "ZEG") == 0) {
             drawScreen(SCR_ZEG);
-        }else if(label[cursor] == "UST"){
+        } else if (strcmp(label[cursor], "UST") == 0) {
             drawScreen(SCR_UST);
         }
-    else if(current_selected == SCR_UST){
+    }else if (current_selected == SCR_STN) {
+        if (stn_edit) {
+            temp_hp += (d * 5); // Zmieniaj HP o 5 punktów za każdym skokiem
+            
+            // Zabezpieczenie przed wyjściem poza skalę
+            if (temp_hp < 0) temp_hp = 0;
+            if (temp_hp > player.maxHp) temp_hp = player.maxHp;
+            
+            drawThemAll(); // Rysuj ponownie, by zaktualizować paski
+        }
+    }
+    
+    else if (current_selected == SCR_UST) {
+        if (!ust_edit) {
+            ust_cursor += d;
+            // Pamiętaj by zaktualizować limit na SETTINGS_COUNT (czyli 6)
+            if (ust_cursor < 0) ust_cursor = 0;
+            if (ust_cursor >= SETTINGS_COUNT) ust_cursor = SETTINGS_COUNT - 1;
+        } else {
+            // --- TRYB EDYCJI ---
+            if (ust_cursor == 0) { 
+                // 1. ZMIANA LITERY W IMIENIU (A-Z oraz Spacja)
+                char& c = playerName[name_char_idx];
+                if (d > 0) {
+                    if (c >= 'A' && c < 'Z') c++;
+                    else if (c == 'Z') c = ' '; // Po Z jest spacja
+                    else if (c == ' ') c = 'A'; // Po spacji znowu A
+                    else c = 'A'; // Zabezpieczenie
+                } else if (d < 0) {
+                    if (c > 'A' && c <= 'Z') c--;
+                    else if (c == 'A') c = ' '; // Przed A jest spacja
+                    else if (c == ' ') c = 'Z'; // Przed spacją jest Z
+                    else c = 'Z'; // Zabezpieczenie
+                }
+            } else {
+                // 2. ZMIANA WARTOŚCI LICZBOWYCH (stary kod)
+                int step = 1; 
+                if (strcmp(settings[ust_cursor].unit, "%") == 0) step = 5;
+                settings[ust_cursor].value += (d * step);
 
+                if (settings[ust_cursor].value < settings[ust_cursor].min_val) settings[ust_cursor].value = settings[ust_cursor].min_val;
+                if (settings[ust_cursor].value > settings[ust_cursor].max_val) settings[ust_cursor].value = settings[ust_cursor].max_val;
+            }
+        }
+        drawScreen(SCR_UST);
     }
 }
 
-void drawScreen(Screen prop){
-    tft.fillRect(0,50,480,250, COLOR_BG);
-    if (prop == SCR_STN){
+// --- Logika rysowania głównego ekranu ---
+void Status::drawScreen(Screen prop) {
+    tft.fillRect(0, 50, 480, 250, COLOR_BG);
+
+    if (prop == SCR_STN) {
         drawScreenSTN();
-    }else if(prop == SCR_RAD){
+    } else if (prop == SCR_RAD) {
         drawScreenRAD();
-    }
-    else if(prop == SCR_ZEG){
+    } else if (prop == SCR_ZEG) {
         drawScreenZEG();
-    
-    }else if(prop == SCR_UST){
+    } else if (prop == SCR_UST) {
         drawScreenUST();
     }
 
-
+    // --- Pasek zakładek nawigacyjnych ---
     tft.setFont(&monofonto_rg9pt7b);
     tft.setTextColor(COLOR_GREEN);
     tft.setTextDatum(ML_DATUM);
-    int y =90;
+    int y = 90;
     int n = 0;
-    for (const char* i : label){
-        if(n==cursor){
-            tft.fillRect(20,y-17,46,30,COLOR_GREEN);
-            tft.fillRect(23,y-14,40,24,COLOR_BG);
+    
+    for (const char* i : label) {
+        if (n == cursor) {
+            tft.fillRect(20, y - 17, 46, 30, COLOR_GREEN);
+            tft.fillRect(23, y - 14, 40, 24, COLOR_BG);
         }
         tft.drawString(i, 30, y);
-        y+= 40;
+        y += 40;
         n++;
     }
     
     tft.unloadFont();
 }
 
-void drawScreenSTN() {
-    
+
+// --- Prywatne metody rysujące poszczególne widoki ---
+void Status::drawScreenSTN() {
     sprite[0].pushRotateZoom(&tft, 
     240,      // środek X na ekranie
-    160,      // środek Y na ekranie
-    0,      // rotacja w stopniach
-    0.8,    // zoom X (0.5 = połowa rozmiaru)
-    0.8  );   // zoom Y (0.5 = połowa rozmiaru)
-}
-void drawScreenRAD() {
-    sprite[2].pushRotateZoom(&tft, 
+    170,      // środek Y na ekranie
+    0,        // rotacja w stopniach
+    0.8,      // zoom X 
+    0.8);     // zoom Y 
+
+    int weight = player.hp * 100 / player.maxHp;
+    int picid= 0;
+    switch (weight) {
+        case 85 ... 100:
+            picid = 1;
+            break;
+
+        case 65 ... 84:
+            picid = 2;
+            break;
+
+        case 35 ... 64:
+            picid = 3;
+            break;
+
+        case 15 ... 34:
+            picid = 4;
+            break;
+        case 0 ... 14:
+            picid = 5;
+            break;
+    }
+    sprite[picid].pushRotateZoom(&tft, 
     240,      // środek X na ekranie
-    200,      // środek Y na ekranie
-    0,      // rotacja w stopniach
-    1,    // zoom X (0.5 = połowa rozmiaru)
-    1  );   // zoom Y (0.5 = połowa rozmiaru)
+    108,      // środek Y na ekranie
+    0,        // rotacja w stopniach
+    0.8,      // zoom X 
+    0.8,
+    0xF81F);
+
+    drawThemAll();
 }
 
-void drawScreenZEG() {
+void Status::drawScreenRAD() {
+    sprite[2].pushRotateZoom(&tft, 
+    240, 
+    200, 
+    0, 
+    1.0, 
+    1.0); 
+}
+
+void Status::drawScreenZEG() {
     tft.setFont(&monofonto_rg70pt7b);
-    tft.drawString(getTime(), 80, 160);
+    //tft.drawString(getTime(), 80, 160);
+    tft.drawString("21:37", 80, 160);
     tft.unloadFont();
 }
 
-void drawScreenDIFF() {
-
+void Status::drawScreenDIFF() {
     sprite[1].pushRotateZoom(&tft, 
-    240,      // środek X na ekranie
-    160,      // środek Y na ekranie
-    0,      // rotacja w stopniach
-    1,    // zoom X (0.5 = połowa rozmiaru)
-    1  );   // zoom Y (0.5 = połowa rozmiaru)
+    240, 
+    160, 
+    0, 
+    1.0, 
+    1.0); 
 }
 
-void drawScreenUST() {
-    const int TABLE_X     = 80;   // lewa krawędź tabelki
-    const int TABLE_Y     = 60;   // górna krawędź
-    const int ROW_H       = 42;   // wysokość wiersza
-    const int COL_NAME_W  = 180;  // szerokość kolumny "Nazwa"
-    const int COL_VAL_W   = 140;  // szerokość kolumny "Wartość"
-    const int TABLE_W     = COL_NAME_W + COL_VAL_W;
+void Status::drawScreenUST() {
+    const int TABLE_X    = 80;   
+    const int TABLE_Y    = 60;   
+    const int ROW_H      = 42;   
+    const int COL_NAME_W = 180;  
+    const int COL_VAL_W  = 140;  
+    const int TABLE_W    = COL_NAME_W + COL_VAL_W;
 
     // --- Nagłówek ---
     tft.fillRect(TABLE_X, TABLE_Y, TABLE_W, ROW_H - 6, COLOR_GREEN);
@@ -146,64 +237,123 @@ void drawScreenUST() {
 
     // --- Wiersze ---
     for (int i = 0; i < SETTINGS_COUNT; i++) {
-        int row_y = TABLE_Y + (ROW_H - 6) + i * ROW_H;
+        int row_y = TABLE_Y+5 + (ROW_H - 6) + i * ROW_H;
         bool selected = (i == ust_cursor);
 
-        // Tło wiersza
         if (selected && !ust_edit) {
-            // Zaznaczony — zielone tło
             tft.fillRect(TABLE_X, row_y, TABLE_W, ROW_H - 2, COLOR_GREEN);
         } else if (selected && ust_edit) {
-            // Tryb edycji — ramka migająca (wypełnienie przyciemnione)
             tft.fillRect(TABLE_X, row_y, TABLE_W, ROW_H - 2, COLOR_BG);
             tft.drawRect(TABLE_X, row_y, TABLE_W, ROW_H - 2, COLOR_GREEN);
         } else {
-            // Zwykły wiersz — obramowanie
             tft.fillRect(TABLE_X, row_y, TABLE_W, ROW_H - 2, COLOR_BG);
             tft.drawFastHLine(TABLE_X, row_y + ROW_H - 2, TABLE_W, COLOR_GREEN);
         }
 
-        // Linia pionowa między kolumnami
         tft.drawFastVLine(TABLE_X + COL_NAME_W, row_y, ROW_H - 2, COLOR_GREEN);
 
-        // Tekst nazwy
         tft.setFont(&monofonto_rg13pt7b);
         tft.setTextDatum(ML_DATUM);
         tft.setTextColor(selected && !ust_edit ? COLOR_BG : COLOR_GREEN);
         tft.drawString(settings[i].name, TABLE_X + 10, row_y + ROW_H / 2);
 
-        // Tekst wartości (z jednostką)
-        char val_buf[16];
-        if (strcmp(settings[i].unit, "") == 0) {
-            // Dla CZAS SYNC: ON/OFF
-            snprintf(val_buf, sizeof(val_buf), "%s",
-                     settings[i].value ? "ON" : "OFF");
+        char val_buf[24]; 
+        
+        if (i == 0) {
+            // RYSOWANIE IMIENIA
+            if (ust_edit && selected) {
+                // W trybie edycji pokazujemy aktywną literę, np: VA>U<LTBOY
+                int pos = 0;
+                for(int j = 0; j < 8; j++) {
+                    if (j == name_char_idx) val_buf[pos++] = '>';
+                    val_buf[pos++] = playerName[j];
+                    if (j == name_char_idx) val_buf[pos++] = '<';
+                }
+                val_buf[pos] = '\0';
+            } else {
+                // Poza trybem edycji po prostu wyświetlamy imię
+                snprintf(val_buf, sizeof(val_buf), "%s", playerName);
+            }
         } else {
-            snprintf(val_buf, sizeof(val_buf), "%d%s",
-                     settings[i].value, settings[i].unit);
+            // RYSOWANIE RESZTY ZMIENNYCH
+            if (strcmp(settings[i].unit, "BOOL") == 0) {
+                // Używamy nowej flagi BOOL, by odróżnić torebkę włącznika od pustego stringa LEVEL
+                snprintf(val_buf, sizeof(val_buf), "%s", settings[i].value ? "ON" : "OFF");
+            } else {
+                snprintf(val_buf, sizeof(val_buf), "%d%s", settings[i].value, settings[i].unit);
+            }
         }
 
+        // --- RYSOWANIE WARTOŚCI NA EKRANIE ---
         tft.setTextDatum(MR_DATUM);
-        // W trybie edycji rysujemy strzałki < wartość >
+        
         if (selected && ust_edit) {
             tft.setTextColor(COLOR_GREEN);
-            char edit_buf[24];
-            snprintf(edit_buf, sizeof(edit_buf), "< %s >", val_buf);
-            tft.drawString(edit_buf, TABLE_X + TABLE_W - 10, row_y + ROW_H / 2);
+            
+            // Dla imienia nawiasy wstawiliśmy już wyżej wokół pojedynczej litery, więc ich nie dublujemy
+            if (i == 0) {
+                tft.drawString(val_buf, TABLE_X + TABLE_W - 10, row_y + ROW_H / 2);
+            } else {
+                // Dla liczb zostawiamy twoje duże nawiasy edycji np: < 80% >
+                char edit_buf[32];
+                snprintf(edit_buf, sizeof(edit_buf), "< %s >", val_buf);
+                tft.drawString(edit_buf, TABLE_X + TABLE_W - 10, row_y + ROW_H / 2);
+            }
         } else {
             tft.drawString(val_buf, TABLE_X + TABLE_W - 10, row_y + ROW_H / 2);
         }
-    }
 
-    // --- Podpowiedź na dole ---
-    tft.setFont(&monofonto_rg9pt7b);
-    tft.setTextDatum(MC_DATUM);
-    tft.setTextColor(COLOR_GREEN);
-    if (ust_edit) {
-        tft.drawString("[</> ZMIEN]  [OK ZATWIERDZ]", 240, TABLE_Y + (ROW_H - 6) + SETTINGS_COUNT * ROW_H + 20);
-    } else {
-        tft.drawString("[^/v PORUSZAJ]  [OK EDYTUJ]", 240, TABLE_Y + (ROW_H - 6) + SETTINGS_COUNT * ROW_H + 20);
+    
     }
-
     tft.unloadFont();
+}
+
+void Status::statusSelect() {
+    if (current_selected == SCR_NUFN) {
+        if (strcmp(label[cursor], "UST") == 0) {
+            current_selected = SCR_UST;
+            ust_cursor = 0;
+            ust_edit = false;
+            drawScreen(SCR_UST);
+        }else if (strcmp(label[cursor], "STN") == 0) {
+            // WEJŚCIE W EDYCJĘ HP
+            current_selected = SCR_STN;
+            stn_edit = true;
+            temp_hp = player.hp; // Pobieramy aktualne HP na start edycji
+            drawScreen(SCR_STN);
+        }
+    } else if (current_selected == SCR_STN) {
+        if (stn_edit) {
+            stn_edit = false;            // Zakończ edycję
+            current_selected = SCR_NUFN; // Wróć sterowaniem do zakładek (TopBar)
+            player.hp = temp_hp;         // ZAPISZ NOWE HP!
+            
+            drawTopBar();                // Aktualizacja TopBaru (HP w tekście)
+            drawScreen(SCR_STN);         // Rysujemy ponownie STN, co teraz zaktualizuje minkę
+        }
+    }
+    else if (current_selected == SCR_UST) {
+        if (!ust_edit) {
+            ust_edit = true; // Wchodzimy w tryb edycji
+            if (ust_cursor == 0) {
+                name_char_idx = 0; // Zawsze zaczynamy edycję od 1. litery
+            }
+        } else {
+            if (ust_cursor == 0) { // Jesteśmy w edycji IMIENIA
+                name_char_idx++;   // Przeskocz na następną literę
+                
+                if (name_char_idx >= 8) { // Jeśli zatwierdzono 8. literę
+                    ust_edit = false;     // Zakończ edycję
+                    name_char_idx = 0;
+                }
+            } else if(ust_cursor == 1){
+                ust_edit = false; 
+                player.level = settings[1].value;
+                drawTopBar();
+            }else {
+                ust_edit = false; // Dla reszty ustawień wyjdź z edycji normalnie
+            }
+        }
+        drawScreen(SCR_UST);
+    }
 }

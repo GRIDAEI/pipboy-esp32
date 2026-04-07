@@ -15,7 +15,7 @@ void drawTopBar() {
   tft.setFont(&monofonto_rg13pt7b);
   
   // === TŁO CAŁEGO TOPBARA ===
-  tft.fillRect(0, 0, SCREEN_W, 28, COLOR_BG);
+  tft.fillRect(0, 0, SCREEN_W, 50, COLOR_BG);
 
   tft.fillRect(staty_begin_x, 20, staty_line_length, line_width,COLOR_GREEN);
   tft.fillRect(staty_begin_x, 20, line_width, 25,COLOR_GREEN);
@@ -37,11 +37,16 @@ void drawTopBar() {
     const char* value;
     int x;
   };
+  char hpBuffer[20];
 
+  // 2. Formatujemy tekst: %d oznacza liczbę całkowitą
+  snprintf(hpBuffer, sizeof(hpBuffer), "%d/%d", player.hp, player.maxHp);
+
+  // 3. Teraz wrzucamy gotowy bufor do tablicy
   StatField fields[] = {
-    { "HP ",  "347/390",   203 },
-    { "AP ",  "67/67",     297 },
-    { "XP ",  "476/3050",  375 },
+      { "HP ",  hpBuffer,     203 },
+      { "AP ",  "67/67",      297 },
+      { "XP ",  "476/3050",   375 }
   };
 
   for (auto& f : fields) {
