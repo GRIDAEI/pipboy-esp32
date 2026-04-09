@@ -71,14 +71,13 @@ void setup() {
       Serial.println("BLAD: drawFunction jest PUSTE! Brakuje przypisania.");
   }
   //start_zeg(rtc_sda, rtc_scl); // 3. RTC
-  initAudio();              // 4. audio
-  playSound("/device_on.wav");
+  //initAudio();              // 4. audio
+  //playSound("/device_on.wav");
   Serial.println("Done!");
 }
 void loop() {
   handleAudio();
   //handleVibro();
-
   bool upNow = digitalRead(upbtn);
   bool downNow = digitalRead(downbtn);
   bool selectNow = HIGH;
@@ -105,17 +104,17 @@ void loop() {
   if(upPrev == HIGH && upNow == LOW){
       current_up();
       vibrate();
-      playSound("/switch_opt.wav");
+      //playSound("/switch_opt.wav");
   }
   if(downPrev == HIGH && downNow == LOW){
       current_down();
       vibrate();
-      playSound("/switch_opt.wav");
+      //playSound("/switch_opt.wav");
   }
   if(selectPrev == HIGH && selectNow == LOW){
       press_current_select();
       vibrate();
-      playSound("/switch_opt.wav");
+      //playSound("/switch_opt.wav");
   }
   upPrev = upNow;
   downPrev = downNow;

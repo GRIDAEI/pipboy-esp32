@@ -1,11 +1,10 @@
-#include "special.h" // Twój plik nagłówkowy z klasą
+#include "special.h"
 
-// Includujemy grafiki tylko tutaj, bo tylko tutaj są fizycznie ładowane do pamięci
 #include "../../imgs/Strength2_icon.h"
 #include "../../imgs/perception.h"
 #include "../../imgs/Endurance.h"
-
-// 1. Definicja danych - tworzymy tablicę (zauważ, że tu NIE MA słowa extern)
+#include "../../display.h"
+extern LGFX tft;
 Entry special_entries[] = {
     {"Sila", 8, "Surowa sila fizyczna. Wysoka siła jest przydatna zwłaszcza dla postaci bazujących na cechach fizycznych.", 0},
     {"Percepcja", 4, "Opis percepcji", 1},
@@ -16,15 +15,21 @@ Entry special_entries[] = {
     {"Szczescie", 3, "Opis szczescia", 2}
 };
 
-// 2. Obliczamy faktyczny rozmiar tablicy RAZ i trzymamy w zmiennej
 int special_max_entries = sizeof(special_entries) / sizeof(special_entries[0]);
-
-// 3. Tworzymy tablicę obiektów LGFX_Sprite
+// 3. INICJALIZACJA: Przypisujemy główny ekran do każdego sprite'a w tablicy
 LGFX_Sprite special_sprites[3];
 
 // 4. Implementacja funkcji ładującej obrazki
 void load_special_sprites() {
-    special_sprites[0].createFromBmp(Strength2_icon);
-    special_sprites[1].createFromBmp(perception);
-    special_sprites[2].createFromBmp(Endurance);
+    special_sprites[0] = LGFX_Sprite(&tft);
+    // Dobra praktyka dla ESP32-S3: jeśli masz zewnętrzny RAM (PSRAM), 
+    // odkomentuj poniższą linijkę, aby zaoszczędzić cenną pamięć SRAM:
+    // special_sprites[0].setPsram(true);
+
+    special_sprites[0].setColorDepth(16);
+    special_sprites[0].createSprite(70, 120); // Teraz zadziała bez błędu!
+    special_sprites[0].setSwapBytes(true);
+    special_sprites[0].pushImage(0, 0, 70, 120, Strength2_icon);
+
+    // ... reszta Twojego kodu
 }

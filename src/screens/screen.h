@@ -1,5 +1,7 @@
 #pragma once
 #include <functional>
+#include "stats/status.h"
+#include "stats/special.h"
 struct AppScreen{
     std::function<void()> drawFunction;
     std::function<void()> up;
@@ -11,7 +13,8 @@ void topbot();
 void load_all_sprites();
 extern int screen_id;
 void current_up();
-
+extern Special objSpecialScreen;
+extern Status objStatusScreen;
 void current_down();
 void change_screen(int f);
 void press_current_select();

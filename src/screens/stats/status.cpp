@@ -1,14 +1,17 @@
 #include "status.h"
 #include "../topbar.h"
-
+#include "../../imgs/GRiD_Logo_White.h"
 // --- Konstruktor inicjalizujący domyślne wartości ---
 Status::Status() {
     cursor = 0;
     ust_cursor = 0;
     ust_edit = false;
-    current_selected = SCR_NUFN;
+    current_selected = SCR_STN;
+    action_pool = SCR_NUFN;
     stn_edit = false; // <--- NOWE: flaga edycji STN
     temp_hp = player.hp;
+    gmf_last_time = 0;
+    gmf_show_grid = false;
     // --- NOWE ZMIENNE DLA IMIENIA ---
     strcpy(playerName, "VAULTBOY"); // Domyślne imię (max 8 znaków)
     name_char_idx = 0;
@@ -36,6 +39,7 @@ void Status::loadSprites() {
         sprite[i].pushImage(0, 0, width, height, b[i]);
     }
 
+
 }
 void drawBar(int x,int y, int weight){
     tft.fillRect(x,y,70,16, COLOR_BG);
@@ -52,12 +56,13 @@ void Status::drawThemAll(){
     drawBar(300,210,weight);    
 }
 void Status::changeCursor(int d) {
-    if (current_selected == SCR_NUFN) {
+    Serial.println(current_selected);
+    if (action_pool == SCR_NUFN) {
         cursor += d;
         
         // Zabezpieczenie przed wyjściem poza zakres (0 - 3)
         if (cursor < 0) cursor = 0;
-        if (cursor > 3) cursor = 3;
+        if (cursor > 4) cursor = 4;
 
         if (strcmp(label[cursor], "STN") == 0) {
             current_selected = SCR_STN;
@@ -67,9 +72,13 @@ void Status::changeCursor(int d) {
             current_selected = SCR_ZEG;
         } else if (strcmp(label[cursor], "UST") == 0) {
             current_selected = SCR_UST;
+        }else if (strcmp(label[cursor], "GMF") == 0) {
+            current_selected = SCR_GMF;
         }
+        Serial.print("Wybralem: ");
+        Serial.println(label[cursor]);
         drawScreen();
-    }else if (current_selected == SCR_STN) {
+    }else if (action_pool == SCR_STN) {
         if (stn_edit) {
             temp_hp += (d * 5); // Zmieniaj HP o 5 punktów za każdym skokiem
             
@@ -81,7 +90,7 @@ void Status::changeCursor(int d) {
         }
     }
     
-    else if (current_selected == SCR_UST) {
+    else if (action_pool == SCR_UST) {
         if (!ust_edit) {
             ust_cursor += d;
             // Pamiętaj by zaktualizować limit na SETTINGS_COUNT (czyli 6)
@@ -120,7 +129,7 @@ void Status::changeCursor(int d) {
 // --- Logika rysowania głównego ekranu ---
 void Status::drawScreen() {
     tft.fillRect(0, 50, 480, 250, COLOR_BG);
-    Serial.print("STATUS: Probuje Rysować");
+    Serial.println(current_selected);
     if (current_selected == SCR_STN) {
         drawScreenSTN();
     } else if (current_selected == SCR_RAD) {
@@ -129,7 +138,10 @@ void Status::drawScreen() {
         drawScreenZEG();
     } else if (current_selected == SCR_UST) {
         drawScreenUST();
+    }else if (current_selected == SCR_GMF) {
+        drawScreenGMF();
     }
+
 
     // --- Pasek zakładek nawigacyjnych ---
     tft.setFont(&monofonto_rg9pt7b);
@@ -190,7 +202,6 @@ void Status::drawScreenSTN() {
     0.8,      // zoom X 
     0.8,
     0xF81F);
-
     drawThemAll();
 }
 
@@ -356,5 +367,42 @@ void Status::statusSelect() {
             }
         }
         drawScreen();
+    }
+}
+void Status::drawScreenGMF() {
+    // 1. Czyścimy tło (upewnij się, że ten prostokąt zakrywa stare napisy)
+    tft.fillRect(70, 60, 350, 120, COLOR_BG); 
+    
+    // 2. Wymuszamy ustawienia czcionki
+    tft.setFont(&monofonto_rg70pt7b);
+    tft.setTextColor(COLOR_GREEN, COLOR_BG); // Dodajemy kolor tła, by nadpisywał piksele
+    tft.setTextDatum(TL_DATUM); // Standardowe wyrównanie (Top-Left)
+    
+    
+    tft.drawString("SKN", 80, 40);
+    tft.drawString("GRiD", 80, 160);
+    tft.pushImage(360, 170, 110, 110, GRiD_Logo_White, 0xF81F);
+    tft.unloadFont();
+}
+void Status::update() {
+    // Tutaj wstaw stałą oznaczającą ekran GMF (zakładam, że nazywa się SCR_GMF)
+    if (current_selected == SCR_GMF) { 
+        // Jeśli minęły 4 sekundy (4000 ms)
+        if (millis() - gmf_last_time >= 4000) {
+            gmf_last_time = millis();
+            
+            // Odwracamy stan flagi: jeśli była true, staje się false i na odwrót
+            if (gmf_show_grid){
+                gmf_show_grid = false;
+            }else{
+                gmf_show_grid = true;
+            }
+            
+            // Wypisz na konsolę, żebyśmy wiedzieli, czy flaga się przełącza
+            Serial.print("Aktualizacja GMF. Nowy stan: ");
+            Serial.println(gmf_show_grid ? "GRID" : "GMF");
+            
+            drawScreenGMF();
+        }
     }
 }

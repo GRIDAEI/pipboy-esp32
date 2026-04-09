@@ -1,6 +1,5 @@
 #include "screen.h"
-#include "stats/status.h"
-#include "stats/special.h"
+
 #include "display.h"
 #include "topbar.h"
 #include "botbar.h"
@@ -22,7 +21,7 @@ AppScreen Special_Screen{ // Zmieniłem nazwę z Special na SpecialScreen, by ni
     []() { objSpecialScreen.down(); },      // Wywołuje ruch w dół Z OBIEKTU
     []() { /* Tu co tam miałeś, np. change_cursor(1); */ } 
 };
-
+int screen_id = 0;
 struct Section{
     std::vector<const char*> screen_names;
     std::vector<AppScreen> screens;
@@ -35,24 +34,21 @@ void topbot(){
     drawBottomNav(1);
 }
 
-// void draw_current_screen(){
-//     tft.fillRect(0,50,480,240, COLOR_BG);
-//     if (current_screen == nullptr) {
-//         Serial.println("BŁĄD: Próba rysowania bez ustawionego ekranu!");
-//         return; 
-//     }
-//     Serial.println("SCREEN: Probuje Rysować");
-//     current_screen->drawFunction();
-// }
 
 void load_all_sprites(){
     objStatusScreen.loadSprites();
-    //load_special_sprites();
+    load_special_sprites();
 }
 
 void change_screen(int i){
-    if(i==0 || i==1){
-        current_screen = &STATS.screens[i];
+    int d = screen_id + i;
+    if (d>1) d=1;
+    else if (d<0) d=0;
+
+    if(i==-1 || i==1){
+        current_screen = &STATS.screens[d];
+
+        current_screen->drawFunction();
     }    
 }
 
