@@ -17,12 +17,15 @@ Status::Status() {
     name_char_idx = 0;
 
     // Inicjalizacja tablicy ustawień (zmieniamy rozmiar na 6)
-    settings[0] = { "IMIE",       0, 0,   0, ""     }; // value ignorowane, używamy playerName
-    settings[1] = { "LEVEL",      1, 1, 100, ""     }; 
-    settings[2] = { "JASNOSC",   80, 0, 100, "%"    };
-    settings[3] = { "GLOSNOSC",  50, 0, 100, "%"    };
-    settings[4] = { "KONTRAST",  70, 0, 100, "%"    };
-    settings[5] = { "CZAS SYNC",  1, 0,   1, "BOOL" }; // Używamy "BOOL", aby łatwiej odróżnić ON/OFF od LEVEL
+    settings[0] = {"Wroc", 1,0,1,"BOOL"};
+    settings[1] = { "IMIE",       0, 0,   0, ""     }; // value ignorowane, używamy playerName
+    settings[2] = { "LEVEL",      1, 1, 100, ""     }; 
+    settings[3] = { "JASNOSC",   80, 0, 100, "%"    };
+    settings[4] = { "GLOSNOSC",  50, 0, 100, "%"    };
+    settings[5] = { "KONTRAST",  70, 0, 100, "%"    };
+    settings[6] = { "CZAS SYNC",  1, 0,   1, "BOOL" }; // Używamy "BOOL", aby łatwiej odróżnić ON/OFF od LEVEL
+    
+
 }
 
 // --- Wczytywanie zasobów ---
@@ -62,7 +65,7 @@ void Status::changeCursor(int d) {
         
         // Zabezpieczenie przed wyjściem poza zakres (0 - 3)
         if (cursor < 0) cursor = 0;
-        if (cursor > 4) cursor = 4;
+        if (cursor > 3) cursor = 3;
 
         if (strcmp(label[cursor], "STN") == 0) {
             current_selected = SCR_STN;
@@ -217,7 +220,7 @@ void Status::drawScreenRAD() {
 void Status::drawScreenZEG() {
     tft.setFont(&monofonto_rg70pt7b);
     //tft.drawString(getTime(), 80, 160);
-    tft.drawString("21:37", 80, 160);
+    tft.drawString("17:47", 80, 160);
     tft.unloadFont();
 }
 
@@ -269,9 +272,9 @@ void Status::drawScreenUST() {
         tft.setTextColor(selected && !ust_edit ? COLOR_BG : COLOR_GREEN);
         tft.drawString(settings[i].name, TABLE_X + 10, row_y + ROW_H / 2);
 
-        char val_buf[24]; 
-        
-        if (i == 0) {
+        char val_buf[24];
+
+        if (i == 1) {
             // RYSOWANIE IMIENIA
             if (ust_edit && selected) {
                 // W trybie edycji pokazujemy aktywną literę, np: VA>U<LTBOY
@@ -296,7 +299,6 @@ void Status::drawScreenUST() {
             }
         }
 
-        // --- RYSOWANIE WARTOŚCI NA EKRANIE ---
         tft.setTextDatum(MR_DATUM);
         
         if (selected && ust_edit) {
@@ -347,20 +349,24 @@ void Status::statusSelect() {
     else if (action_pool == SCR_UST) {
         if (!ust_edit) {
             ust_edit = true; // Wchodzimy w tryb edycji
-            if (ust_cursor == 0) {
-                name_char_idx = 0; // Zawsze zaczynamy edycję od 1. litery
+            if (ust_cursor == 1) {
+                name_char_idx = 1; // Zawsze zaczynamy edycję od 1. litery
+            }
+            else if(ust_cursor==0){
+                action_pool = SCR_NUFN;
+                ust_edit = false;
             }
         } else {
-            if (ust_cursor == 0) { // Jesteśmy w edycji IMIENIA
+            if (ust_cursor == 1) { // Jesteśmy w edycji IMIENIA
                 name_char_idx++;   // Przeskocz na następną literę
                 
                 if (name_char_idx >= 8) { // Jeśli zatwierdzono 8. literę
                     ust_edit = false;     // Zakończ edycję
                     name_char_idx = 0;
                 }
-            } else if(ust_cursor == 1){
+            } else if(ust_cursor == 2){
                 ust_edit = false; 
-                player.level = settings[1].value;
+                player.level = settings[2].value;
                 drawTopBar();
             }else {
                 ust_edit = false; // Dla reszty ustawień wyjdź z edycji normalnie

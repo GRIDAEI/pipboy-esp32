@@ -73,7 +73,8 @@ public:
         // --- Sekcja rysowania listy ---
         tft.setTextDatum(ML_DATUM);
         int y = 80;
-        Serial.printf("my penis1            ",max_entries);
+        Serial.print("Max Entries:    ");
+        Serial.println(max_entries);
         // Klasyczna pętla (wskaźniki nie obsługują range-based for)
         for (int n = 0; n < max_entries; n++) {
             Entry currentEntry = entries[n];
@@ -94,6 +95,7 @@ public:
             tft.drawString(valStr, 170, y);
             
             y += 30;
+            Serial.println("IMFUCKINGPRINTING");
         }
 
         // --- Sekcja ramki dla opisu ---

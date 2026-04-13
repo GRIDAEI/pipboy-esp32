@@ -15,7 +15,7 @@ Entry special_entries[] = {
     {"Szczescie", 3, "Opis szczescia", 2}
 };
 
-int special_max_entries = sizeof(special_entries) / sizeof(special_entries[0]);
+
 // 3. INICJALIZACJA: Przypisujemy główny ekran do każdego sprite'a w tablicy
 LGFX_Sprite special_sprites[3];
 
@@ -26,10 +26,10 @@ void load_special_sprites() {
     // odkomentuj poniższą linijkę, aby zaoszczędzić cenną pamięć SRAM:
     // special_sprites[0].setPsram(true);
 
-    special_sprites[0].setColorDepth(16);
-    special_sprites[0].createSprite(70, 120); // Teraz zadziała bez błędu!
-    special_sprites[0].setSwapBytes(true);
-    special_sprites[0].pushImage(0, 0, 70, 120, Strength2_icon);
+    // special_sprites[0].setColorDepth(16);
+    // special_sprites[0].createSprite(70, 120); // Teraz zadziała bez błędu!
+    // special_sprites[0].setSwapBytes(true);
+    // special_sprites[0].pushImage(0, 0, 70, 120, Strength2_icon);
 
     // ... reszta Twojego kodu
 }
