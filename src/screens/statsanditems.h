@@ -73,11 +73,10 @@ public:
         // --- Sekcja rysowania listy ---
         tft.setTextDatum(ML_DATUM);
         int y = 80;
-        Serial.printf("my penis1            ",max_entries);
+        Serial.println(max_entries);
         // Klasyczna pętla (wskaźniki nie obsługują range-based for)
         for (int n = 0; n < max_entries; n++) {
             Entry currentEntry = entries[n];
-            Serial.println("my penis2");
             if(n == cursor){
                 tft.fillRect(40, y-17, 146, 30, COLOR_GREEN);
                 tft.fillRect(43, y-14, 140, 24, COLOR_BG);

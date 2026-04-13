@@ -24,7 +24,7 @@ int vibr_ms = 80;
 int rtc_sda = 8;
 int rtc_scl = 9;
 
-int selectBtn = 8;
+int selectBtn = 5;
 bool selectPrev = HIGH;
 unsigned long vibroEnd = 0;
 
@@ -74,6 +74,7 @@ void setup() {
   //initAudio();              // 4. audio
   //playSound("/device_on.wav");
   Serial.println("Done!");
+  
 }
 void loop() {
   handleAudio();
@@ -84,21 +85,11 @@ void loop() {
 
     if (Serial.available() > 0) {
         char c = Serial.read();
-        if (c == 'w' || c == 'W') {
-            upNow = LOW;
-        } 
-        else if (c == 'd' || c == 'D') {
-            change_screen(1);
-        }
-        else if (c == 'a' || c == 'A') {
-            change_screen(-1);
-        }
-        else if (c == 's' || c == 'S') {
-            downNow = LOW;
-        }
-        else if (c == 'v' || c == 'V') {
-            selectNow = LOW;
-        }
+        if      (c == 'w' || c == 'W') upNow = LOW;
+        else if (c == 'd' || c == 'D') change_screen(1);
+        else if (c == 'a' || c == 'A') change_screen(-1);
+        else if (c == 's' || c == 'S') downNow = LOW;
+        else if (c == 'v' || c == 'V') selectNow = LOW;
     }
   
   if(upPrev == HIGH && upNow == LOW){
@@ -118,6 +109,7 @@ void loop() {
   }
   upPrev = upNow;
   downPrev = downNow;
+  selectPrev = selectNow;
   delay(10);
 }
 

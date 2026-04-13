@@ -10,16 +10,27 @@
 AppScreen* current_screen = nullptr;
 Special objSpecialScreen;
 Status objStatusScreen;
+
+Special& getSpecial() {
+    static Special inst;
+    return inst;
+}
+
+Status& getStatus() {
+    static Status inst;
+    return inst;
+}
 AppScreen Status_Screen{
-    []() { objStatusScreen.drawScreen(); },
-    []() { objStatusScreen.changeCursor(1); },
-    []() { objStatusScreen.changeCursor(-1); },
-    []() { objStatusScreen.statusSelect(); }};
-AppScreen Special_Screen{ // Zmieniłem nazwę z Special na SpecialScreen, by nie myliła się z nazwą Klasy
-    []() { objSpecialScreen.drawList(); },  // Wywołuje rysowanie Z OBIEKTU
-    []() { objSpecialScreen.up(); },        // Wywołuje ruch do góry Z OBIEKTU
-    []() { objSpecialScreen.down(); },      // Wywołuje ruch w dół Z OBIEKTU
-    []() { /* Tu co tam miałeś, np. change_cursor(1); */ } 
+    []() { getStatus().drawScreen(); },
+    []() { getStatus().changeCursor(1); },
+    []() { getStatus().changeCursor(-1); },
+    []() { getStatus().statusSelect(); }
+};
+AppScreen Special_Screen{
+    []() { getSpecial().drawList(); },
+    []() { getSpecial().up(); },
+    []() { getSpecial().down(); },
+    []() { }
 };
 int screen_id = 0;
 struct Section{
@@ -36,22 +47,25 @@ void topbot(){
 
 
 void load_all_sprites(){
-    objStatusScreen.loadSprites();
-    load_special_sprites();
+    getStatus().loadSprites();   // ← getStatus() zamiast objStatusScreen
+    getSpecial().load_special_sprites();  // jeśli Special też ma loadSprites
 }
 
 void change_screen(int i){
+    tft.fillRect(0, 50, 480, 250, COLOR_BG);
     int d = screen_id + i;
-    if (d>1) d=1;
-    else if (d<0) d=0;
-
-    if(i==-1 || i==1){
+    int max_d = (int)STATS.screens.size() - 1;
+    if (d > max_d) d = max_d;
+    else if (d < 0) d = 0;
+    
+    if (d != screen_id) {
+        screen_id = d;                        // ← aktualizuj screen_id
         current_screen = &STATS.screens[d];
-
+        topbot();                             // odśwież topbar/botbar
         current_screen->drawFunction();
-    }    
+    }
+    
 }
-
 void current_up(){
     current_screen->up();
 }

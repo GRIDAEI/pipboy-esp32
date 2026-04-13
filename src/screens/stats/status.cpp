@@ -25,21 +25,41 @@ Status::Status() {
     settings[5] = { "CZAS SYNC",  1, 0,   1, "BOOL" }; // Używamy "BOOL", aby łatwiej odróżnić ON/OFF od LEVEL
 }
 
-// --- Wczytywanie zasobów ---
 void Status::loadSprites() {
-    sprite[0].createFromBmp(statusBody);
-    // Pamiętaj, aby podać właściwe wymiary. Z pliku .h wynika, że to 60x60.
-    int width = 60;
-    int height = 60;
-    const uint16_t* b[] = { minka0, minka0,minka1, minka2, minka3, minka4 };
-    for(int i =1; i<6;i++){
-        sprite[i].setColorDepth(16);
-        sprite[i].createSprite(width, height);
-        sprite[i].setSwapBytes(true);
-        sprite[i].pushImage(0, 0, width, height, b[i]);
+    // --- sprite[0] - body postaci z BMP ---
+    // (Pominięto sprite[0] = LGFX_Sprite(&tft); bo obiekty są już zainicjowane przez konstruktor tablicy)
+    bool ok = sprite[0].createFromBmp(statusBody);
+    Serial.print("sprite[0] BMP loaded: ");
+    Serial.println(ok ? "OK" : "FAIL");
+    Serial.print("sprite[0] width: ");
+    Serial.println(sprite[0].width());
+
+    // KLUCZOWE: Ustawienie punktu obrotu (pivot) na dokładny środek sprite'a!
+    if (ok) {
+        sprite[0].setPivot(sprite[0].width() / 2, sprite[0].height() / 2);
     }
 
+    // --- sprite[1-5] - minki ---
+    int width = 60;
+    int height = 60;
+    const uint16_t* b[] = { minka0, minka0, minka1, minka2, minka3, minka4 };
+    
+    for(int i = 1; i < 6; i++) {
+        sprite[i].setColorDepth(16);
+        sprite[i].setPsram(true); 
 
+        // Sprawdzamy czy mamy wystarczająco dużo RAM-u na minki
+        if (!sprite[i].createSprite(width, height)) {
+            Serial.print("Blad alokacji RAM dla minki: ");
+            Serial.println(i);
+        } else {
+            sprite[i].setSwapBytes(true);
+            sprite[i].pushImage(0, 0, width, height, b[i]);
+            
+            // KLUCZOWE: Pivot na środek minki (czyli 30, 30)
+            sprite[i].setPivot(width / 2, height / 2);
+        }
+    }
 }
 void drawBar(int x,int y, int weight){
     tft.fillRect(x,y,70,16, COLOR_BG);
@@ -164,44 +184,23 @@ void Status::drawScreen() {
 }
 
 
-// --- Prywatne metody rysujące poszczególne widoki ---
 void Status::drawScreenSTN() {
-    sprite[0].pushRotateZoom(&tft, 
-    240,      // środek X na ekranie
-    170,      // środek Y na ekranie
-    0,        // rotacja w stopniach
-    0.8,      // zoom X 
-    0.8);     // zoom Y 
+    sprite[0].pushRotateZoom(&tft, 240, 170, 0, 0.8, 0.8); 
 
-    int weight = player.hp * 100 / player.maxHp;
-    int picid= 0;
+    // Użyj temp_hp jeśli jesteś w trybie edycji, w przeciwnym razie player.hp
+    int hp_do_wyswietlenia = stn_edit ? temp_hp : player.hp;
+    int weight = hp_do_wyswietlenia * 100 / player.maxHp;
+    
+    int picid = 0;
     switch (weight) {
-        case 85 ... 100:
-            picid = 1;
-            break;
-
-        case 65 ... 84:
-            picid = 2;
-            break;
-
-        case 35 ... 64:
-            picid = 3;
-            break;
-
-        case 15 ... 34:
-            picid = 4;
-            break;
-        case 0 ... 14:
-            picid = 5;
-            break;
+        case 85 ... 100: picid = 1; break;
+        case 65 ... 84:  picid = 2; break;
+        case 35 ... 64:  picid = 3; break;
+        case 15 ... 34:  picid = 4; break;
+        case 0 ... 14:   picid = 5; break;
     }
-    sprite[picid].pushRotateZoom(&tft, 
-    240,      // środek X na ekranie
-    108,      // środek Y na ekranie
-    0,        // rotacja w stopniach
-    0.8,      // zoom X 
-    0.8,
-    0xF81F);
+
+    sprite[picid].pushRotateZoom(&tft, 240, 108, 0, 0.8, 0.8, 0xF81F);
     drawThemAll();
 }
 

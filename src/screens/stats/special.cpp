@@ -3,6 +3,7 @@
 #include "../../imgs/Strength2_icon.h"
 #include "../../imgs/perception.h"
 #include "../../imgs/Endurance.h"
+#include "../../imgs/zydu.h"
 #include "../../display.h"
 extern LGFX tft;
 Entry special_entries[] = {
@@ -17,19 +18,55 @@ Entry special_entries[] = {
 
 int special_max_entries = sizeof(special_entries) / sizeof(special_entries[0]);
 // 3. INICJALIZACJA: Przypisujemy główny ekran do każdego sprite'a w tablicy
-LGFX_Sprite special_sprites[3];
 
-// 4. Implementacja funkcji ładującej obrazki
-void load_special_sprites() {
-    special_sprites[0] = LGFX_Sprite(&tft);
-    // Dobra praktyka dla ESP32-S3: jeśli masz zewnętrzny RAM (PSRAM), 
-    // odkomentuj poniższą linijkę, aby zaoszczędzić cenną pamięć SRAM:
-    // special_sprites[0].setPsram(true);
+struct SpecialImageData {
+    const uint16_t* img; // Wskaźnik do tablicy z obrazkiem
+    int width;           // Szerokość obrazka
+    int height;          // Wysokość obrazka
+};
+void Special::load_special_sprites() {
+    
+    // 2. Tablica z obrazkami i ich indywidualnymi wymiarami
+    const SpecialImageData images[] = {
+        { Strength2_icon, 70, 120 }, // [0] Szerokość 70, wysokość 120
+        { Strength2_icon, 70, 120 },  // [1] Przykład innej wielkości (np. 60x60)
+        { Zydu, 126, 160 }  // [2] Kolejny przykład (np. 80x100)
+        // Jak dodasz nowe, po prostu dopisuj kolejne linijki: { nazwa_pliku, szerokosc, wysokosc }
+    }; 
+    
+    // Automatyczne liczenie ilości obrazków (nie musisz już tego zmieniać ręcznie!)
+    int images_to_load = sizeof(images) / sizeof(images[0]); 
+    
+    for (int i = 0; i < images_to_load; i++) {
+        // Pobieramy wymiary dla aktualnie ładowanego obrazka
+        int w = images[i].width;
+        int h = images[i].height;
 
-    special_sprites[0].setColorDepth(16);
-    special_sprites[0].createSprite(70, 120); // Teraz zadziała bez błędu!
-    special_sprites[0].setSwapBytes(true);
-    special_sprites[0].pushImage(0, 0, 70, 120, Strength2_icon);
+        special_sprites[i].setColorDepth(16);
+        
+        // Odkomentuj to, jeśli masz płytkę z PSRAM
+        special_sprites[i].setPsram(true); 
 
-    // ... reszta Twojego kodu
+        // ZABEZPIECZENIE: Tworzymy sprite'a z indywidualnymi wymiarami (w, h)
+        if (!special_sprites[i].createSprite(w, h)) {
+            Serial.print("Blad alokacji RAM dla sprite'a SPECIAL id: ");
+            Serial.println(i);
+        } else {
+            special_sprites[i].setSwapBytes(true); // Zmień na false jeśli kolory będą złe
+            
+            // Wgrywamy obrazek używając specyficznych wymiarów i wskaźnika
+            special_sprites[i].pushImage(0, 0, w, h, images[i].img);
+            
+            // Pivot ustawiany dynamicznie na środek (w/2, h/2)
+            special_sprites[i].setPivot(w / 2, h / 2);
+            
+            Serial.print("Zaladowano sprite SPECIAL id: ");
+            Serial.print(i);
+            Serial.print(" (wymiary: ");
+            Serial.print(w);
+            Serial.print("x");
+            Serial.print(h);
+            Serial.println(")");
+        }
+    }
 }
