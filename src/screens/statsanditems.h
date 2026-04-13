@@ -93,6 +93,7 @@ public:
             tft.drawString(valStr, 170, y);
             
             y += 30;
+            Serial.println("IMFUCKINGPRINTING");
         }
 
         // --- Sekcja ramki dla opisu ---

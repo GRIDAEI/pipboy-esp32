@@ -16,7 +16,7 @@ Entry special_entries[] = {
     {"Szczescie", 3, "Opis szczescia", 2}
 };
 
-int special_max_entries = sizeof(special_entries) / sizeof(special_entries[0]);
+
 // 3. INICJALIZACJA: Przypisujemy główny ekran do każdego sprite'a w tablicy
 
 struct SpecialImageData {
