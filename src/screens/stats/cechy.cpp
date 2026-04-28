@@ -1,39 +1,35 @@
-#include "special.h"
+#include "cechy.h"
 
+#include "../../imgs/Scienta.h"
 #include "../../imgs/Strength2_icon.h"
-#include "../../imgs/perception.h"
-#include "../../imgs/Endurance.h"
 #include "../../imgs/zydu.h"
 #include "../../display.h"
 extern LGFX tft;
-Entry special_entries[] = {
-    {"Sila", 8, "Surowa sila fizyczna. Wysoka siła jest przydatna zwłaszcza dla postaci bazujących na cechach fizycznych.", 0},
-    {"Percepcja", 4, "Opis percepcji", 1},
-    {"Wytrzymalosc", 5, "Opis wytrzymalosc", 2},
-    {"Charyzma", 4, "Opis charyzmy", 2},
-    {"Inteligencja", 7, "Opis inteligencji", 2},
-    {"Zwinnosc", 4, "Opis zwinnosci", 2},
-    {"Szczescie", 3, "Opis szczescia", 2}
+Entry cechy_entries[] = {
+    {"Studium Valet", -1, "'Studiowanie na polibudzie sprawia ze czekasz na nuklearna zime.'\n\nPermametne zwiekszenie percepcji", 0},
+    {"Glupi ma szczescie", -1, "Posiadasz nie tylko zapal do nauki, a rowniez szczescie ze mozesz ja czerpac z twoich licznych bledow.", 1},
+    {"Polak nie kaktus", -1, "Musi pic", 2},
+    {"ZaKimJestes", -1, "Zadajesz wszystkim innym frakcjom 1.5 razy wiecej obrazen, ale tyle samo od nich otrzymujesz.", 2},
+    {"nerwwwwwwicaa", -1, "Za każdym rokiem może się coś czychać, serce tak dudni że nie musisz pic kawy. \n\n Percepcja zwiekszona na koszt zdrowia.",2}
 };
 
-int special_max_entries = 7;
+int cechy_max_entries = 5;
 // 3. INICJALIZACJA: Przypisujemy główny ekran do każdego sprite'a w tablicy
 
-struct SpecialImageData {
+struct cechyImageData {
     const uint16_t* img; // Wskaźnik do tablicy z obrazkiem
     int width;           // Szerokość obrazka
     int height;          // Wysokość obrazka
 };
-void Special::load_special_sprites() {
+void Cechy::load_cechy_sprites() {
     
     // 2. Tablica z obrazkami i ich indywidualnymi wymiarami
-    const SpecialImageData images[] = {
+    const cechyImageData images[] = {
         { Strength2_icon, 70, 120 }, // [0] Szerokość 70, wysokość 120
         { Strength2_icon, 70, 120 },  // [1] Przykład innej wielkości (np. 60x60)
         { Zydu, 126, 160 }  // [2] Kolejny przykład (np. 80x100)
         // Jak dodasz nowe, po prostu dopisuj kolejne linijki: { nazwa_pliku, szerokosc, wysokosc }
     }; 
-    
     // Automatyczne liczenie ilości obrazków (nie musisz już tego zmieniać ręcznie!)
     int images_to_load = sizeof(images) / sizeof(images[0]); 
     
@@ -42,23 +38,23 @@ void Special::load_special_sprites() {
         int w = images[i].width;
         int h = images[i].height;
 
-        special_sprites[i].setColorDepth(16);
+        cechy_sprites[i].setColorDepth(16);
         
         // Odkomentuj to, jeśli masz płytkę z PSRAM
-        special_sprites[i].setPsram(true); 
+        cechy_sprites[i].setPsram(true); 
 
         // ZABEZPIECZENIE: Tworzymy sprite'a z indywidualnymi wymiarami (w, h)
-        if (!special_sprites[i].createSprite(w, h)) {
-            Serial.print("Blad alokacji RAM dla sprite'a SPECIAL id: ");
+        if (!cechy_sprites[i].createSprite(w, h)) {
+            Serial.print("Blad alokacji RAM dla sprite'a cechy id: ");
             Serial.println(i);
         } else {
-            special_sprites[i].setSwapBytes(true); // Zmień na false jeśli kolory będą złe
+            cechy_sprites[i].setSwapBytes(true); // Zmień na false jeśli kolory będą złe
             
             // Wgrywamy obrazek używając specyficznych wymiarów i wskaźnika
-            special_sprites[i].pushImage(0, 0, w, h, images[i].img);
+            cechy_sprites[i].pushImage(0, 0, w, h, images[i].img);
             
             // Pivot ustawiany dynamicznie na środek (w/2, h/2)
-            special_sprites[i].setPivot(w / 2, h / 2);
+            cechy_sprites[i].setPivot(w / 2, h / 2);
             
         }
     }

@@ -1,63 +1,50 @@
-#include "RotSwitch.h"
+#include "rotSwitch.h"
 
-RotSwitch::RotSwitch(uint8_t a, uint8_t b, uint8_t btn) {
-    pinA = a;
-    pinB = b;
-    pinBtn = btn;
-    counter = 0;
-    buttonClicked = false;
-    lastButtonPress = 0;
+RotSwitch::RotSwitch(int pin){
+    setPin(pin);
 }
 
-void RotSwitch::begin() {
-    // Włączamy wewnętrzne rezystory podciągające dla gołego enkodera
-    pinMode(pinA, INPUT_PULLUP);
-    pinMode(pinB, INPUT_PULLUP);
-    pinMode(pinBtn, INPUT_PULLUP);
-    
-    // Odczytujemy stan początkowy pinu A
-    lastStateA = digitalRead(pinA);
-}
+int RotSwitch::update(){
+  int adcValue = analogRead(analogPin);
+  int currentPosition = getSwitchPosition(adcValue);
 
-void RotSwitch::update() {
-    // --- 1. Obsługa obrotu (kodu Graya) ---
-    int currentStateA = digitalRead(pinA);
+  if(currentPosition !=lastPosition){
+    if (!change_confidence()) return 0;
+  }
+  
+  int toreturn = 0;
+  if (currentPosition!= lastPosition){
+    if (currentPosition> lastPosition){
+        Serial.print("WIECEJ");
+        Serial.println(currentPosition);
+        toreturn = 1;
+    }else{
+        Serial.print("Mniej");
+        Serial.println(currentPosition);
+        toreturn = -1;
+    }
+  }
+  lastPosition = currentPosition;
+    return toreturn;
+}
+void RotSwitch::updateEncoder(ESP32Encoder &encoder, bool &up, bool &down) {
+    long currentCount = (long)encoder.getCount();
+    static long lastCount = 0; 
     
-    // Reagujemy tylko na zmianę stanu pinu A
-    if (currentStateA != lastStateA) {
-        // Jeśli pin B ma inny stan niż pin A, kręcimy w jedną stronę
-        if (digitalRead(pinB) != currentStateA) {
-            counter++;
-        } else {
-            // W przeciwnym razie kręcimy w drugą
-            counter--;
+    // Domyślnie resetujemy stany na HIGH (zakładamy brak ruchu)
+    up = HIGH;
+    down = HIGH;
+    
+    // Jeśli pozycja się zmieniła
+    if (currentCount != lastCount) {
+        
+        if (currentCount > lastCount) {
+            up = LOW;     // Zmiana w górę
+        } 
+        else {
+            down = LOW;   // Zmiana w dół
         }
+        
+        lastCount = currentCount; 
     }
-    lastStateA = currentStateA;
-
-    // --- 2. Obsługa przycisku z prostym filtrowaniem (debouncing) ---
-    int btnState = digitalRead(pinBtn);
-    
-    // Sprawdzamy czy wciśnięty (stan LOW przez INPUT_PULLUP)
-    if (btnState == LOW) {
-        // Filtrowanie drgań styków: sprawdzamy czy minęło 50ms od ostatniego kliknięcia
-        if (millis() - lastButtonPress > 50) {
-            buttonClicked = true;
-        }
-        lastButtonPress = millis();
-    }
-}
-
-int RotSwitch::getPosition() {
-    // Enkodery mechaniczne często generują 2 skoki na jedno "kliknięcie" fizyczne.
-    // Dzielenie przez 2 pomaga to ustabilizować (możesz usunąć /2 jeśli reaguje za wolno).
-    return counter / 2; 
-}
-
-bool RotSwitch::isClicked() {
-    if (buttonClicked) {
-        buttonClicked = false; // Resetujemy flagę po odczytaniu, żeby nie klikał w nieskończoność
-        return true;
-    }
-    return false;
 }

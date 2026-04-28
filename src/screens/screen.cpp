@@ -6,20 +6,35 @@
 #include <functional>
 #include <vector>
 
-
 AppScreen* current_screen = nullptr;
 Special objSpecialScreen;
 Status objStatusScreen;
+Cechy objCechyScreen;
+Relacje objRelacjeScreen;
 
 Special& getSpecial() {
-    static Special inst;
-    return inst;
+    static Special instSp;
+    return instSp;
 }
 
 Status& getStatus() {
-    static Status inst;
-    return inst;
+    static Status instSt;
+    return instSt;
 }
+Skille& getSkille() {
+    static Skille instSk;
+    return instSk;
+}
+Cechy& getCechy() {
+    static Cechy instCh;
+    return instCh;
+}
+
+Relacje& getRelacje() {
+    static Relacje instRe;
+    return instRe;
+}
+
 AppScreen Status_Screen{
     []() { getStatus().drawScreen(); },
     []() { getStatus().changeCursor(1); },
@@ -32,13 +47,31 @@ AppScreen Special_Screen{
     []() { getSpecial().down(); },
     []() { }
 };
+AppScreen Skille_Screen{
+    []() { getSkille().drawList(); },
+    []() { getSkille().up(); },
+    []() { getSkille().down(); },
+    []() { }
+};
+AppScreen Cechy_Screen{
+    []() { getCechy().drawList(); },
+    []() { getCechy().up(); },
+    []() { getCechy().down(); },
+    []() { }
+};
+AppScreen Relacje_Screen{
+    []() { getRelacje().drawList(); },
+    []() { getRelacje().up(); },
+    []() { getRelacje().down(); },
+    []() { }
+};
 int screen_id = 0;
 struct Section{
     std::vector<const char*> screen_names;
     std::vector<AppScreen> screens;
 };
 Section STATS{
-     {"Status","S.P.E.C.J.A.L.", "Skille","Cechy","Relacje"}, {Status_Screen,Special_Screen}
+     {"Status","S.P.E.C.J.A.L.", "Skille","Cechy","Relacje"}, {Status_Screen,Special_Screen,Skille_Screen, Cechy_Screen, Relacje_Screen}
 };
 void topbot(){
     drawTopBar();
@@ -49,6 +82,9 @@ void topbot(){
 void load_all_sprites(){
     getStatus().loadSprites();   // ← getStatus() zamiast objStatusScreen
     getSpecial().load_special_sprites();  // jeśli Special też ma loadSprites
+    getCechy().load_cechy_sprites();
+    getSkille().load_skille_sprites();
+    getRelacje().load_relacje_sprites();
 }
 
 void change_screen(int i){
@@ -61,7 +97,8 @@ void change_screen(int i){
     if (d != screen_id) {
         screen_id = d;                        // ← aktualizuj screen_id
         current_screen = &STATS.screens[d];
-        topbot();                             // odśwież topbar/botbar
+        drawTopBar();
+        drawBottomNav(d);
         current_screen->drawFunction();
     }
     

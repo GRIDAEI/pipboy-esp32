@@ -13,9 +13,10 @@ class StatsTemplate {
 protected:
     Entry* entries;      // Wskaźnik na konkretną tablicę danych
     int  max_entries;     // Rozmiar tej tablicy
-    int cursor;          // Aktualnie wybrana pozycja
+    bool writeDesc = true;
 
 public:
+    int cursor;          // Aktualnie wybrana pozycja
     // Konstruktor, który przyjmuje tablicę i jej rozmiar
     StatsTemplate(Entry* _entries, int _max_entries) {
         entries = _entries;
@@ -28,7 +29,9 @@ public:
     virtual void drawDetails(int cur) {
         // Pusto celowo
     }
-
+    void turnDescOff(){
+        writeDesc = false;
+    }
     void drawTextWordWrap(const char* text, int x, int y, int maxWidth) {
         tft.setCursor(x, y);
         int startX = x;
@@ -78,50 +81,51 @@ public:
         for (int n = 0; n < max_entries; n++) {
             Entry currentEntry = entries[n];
             if(n == cursor){
-                tft.fillRect(40, y-17, 146, 30, COLOR_GREEN);
-                tft.fillRect(43, y-14, 140, 24, COLOR_BG);
+                tft.fillRect(40, y-17, 156, 30, COLOR_GREEN);
+                tft.fillRect(43, y-14, 150, 24, COLOR_BG);
             } else {
-                tft.fillRect(40, y-17, 146, 30, COLOR_BG); // zmazywanie starej ramki
+                tft.fillRect(40, y-17, 156, 30, COLOR_BG); // zmazywanie starej ramki
             }
             
             tft.setTextColor(COLOR_GREEN, COLOR_BG);
             tft.drawString(currentEntry.name, 50, y);
             
+            
+            if(currentEntry.value >-1){
             char str[4];
             itoa(currentEntry.value, str, 10);
             String valStr = String(str) + " "; // spacja zamazująca stare cyfry
             tft.drawString(valStr, 170, y);
-            
+            }
             y += 30;
-            Serial.println("IMFUCKINGPRINTING");
         }
 
-        // --- Sekcja ramki dla opisu ---
-        int descX = 230;
-        int descY = 180;
-        int descW = 220;
-        int descH = 80; 
+        if(writeDesc){
+            // --- Sekcja ramki dla opisu ---
+            int descX = 210;
+            int descY = 180;
+            int descW = 220;
+            int descH = 100; 
 
-        // Rysowanie obramowania i czyszczenie TYLKO wnętrza
-        tft.fillRect(descX, descY, descW, descH, COLOR_GREEN);
-        tft.fillRect(descX + 3, descY + 3, descW - 6, descH - 6, COLOR_BG);
+            // Rysowanie obramowania i czyszczenie TYLKO wnętrza
+            tft.fillRect(descX, descY, descW, descH, COLOR_GREEN);
+            tft.fillRect(descX + 3, descY + 3, descW , descH , COLOR_BG);
+            
+            tft.setClipRect(descX + 5, descY + 5, descW - 10, descH - 10);
+            
+            tft.setFont(&monofonto_rg7pt7b);
+            tft.setTextColor(COLOR_GREEN, COLOR_BG);
+            tft.setTextDatum(TL_DATUM);
+            
+            // WYŁĄCZAMY wbudowane zawijanie z LovyanGFX
+            tft.setTextWrap(false); 
+            
+            // Wypisanie opisu pod kątem wybranego kursora
+            drawTextWordWrap(entries[cursor].opis, descX + 5, descY + 5, descW - 10);
         
-        tft.setClipRect(descX + 5, descY + 5, descW - 10, descH - 10);
-        
-        tft.setFont(&monofonto_rg7pt7b);
-        tft.setTextColor(COLOR_GREEN, COLOR_BG);
-        tft.setTextDatum(TL_DATUM);
-        
-        // WYŁĄCZAMY wbudowane zawijanie z LovyanGFX
-        tft.setTextWrap(false); 
-        
-        // Wypisanie opisu pod kątem wybranego kursora
-        drawTextWordWrap(entries[cursor].opis, descX + 5, descY + 5, descW - 10);
-        
-        tft.clearClipRect();
+            tft.clearClipRect();
+        }
         tft.unloadFont();
-        
-        // Wywołanie rysowania obrazka specyficznego dla zakładki
         drawDetails(cursor);
     }
 

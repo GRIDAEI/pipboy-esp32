@@ -15,7 +15,7 @@ Status::Status() {
     // --- NOWE ZMIENNE DLA IMIENIA ---
     strcpy(playerName, "VAULTBOY"); // Domyślne imię (max 8 znaków)
     name_char_idx = 0;
-
+    
     // Inicjalizacja tablicy ustawień (zmieniamy rozmiar na 6)
     settings[0] = {"Wroc", 1,0,1,"BOOL"};
     settings[1] = { "IMIE",       0, 0,   0, ""     }; // value ignorowane, używamy playerName

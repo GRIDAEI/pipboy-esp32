@@ -9,7 +9,7 @@
 #include "imgs/pip.h"
 #include "modules/audio.h"
 #include "modules/rtc.h"
-
+#include "modules/rotSwitch.h"
 
 int upbtn =46;
 bool upclk = false;
@@ -28,7 +28,7 @@ int selectBtn = 5;
 bool selectPrev = HIGH;
 unsigned long vibroEnd = 0;
 
-
+ESP32Encoder encoder;
 
 void vibrate(int ms = vibr_ms) {
     digitalWrite(vibr_pin, HIGH);
@@ -42,6 +42,9 @@ void handleVibro() {
     }
 }
 
+
+RotSwitch rSwitch(9);
+
 void setup() {
   Serial.begin(115200);
   Serial.println("Startt!!!");
@@ -54,14 +57,15 @@ void setup() {
   pinMode(downbtn, INPUT_PULLUP);
   pinMode(vibr_pin, OUTPUT);
   digitalWrite(vibr_pin, LOW);
-    Serial.println("1");
 
   if (!LittleFS.begin()) {
     Serial.println("LittleFS mount failed!");
     return;
   }
   load_all_sprites();
-  Serial.println("2");
+  ESP32Encoder::useInternalWeakPullResistors = puType::up;
+  encoder.attachHalfQuad(1, 2);
+  encoder.setCount(0);
   current_screen = &Status_Screen;
   Serial.println("Rysuje ekran");
   topbot();
@@ -76,6 +80,8 @@ void setup() {
   Serial.println("Done!");
   
 }
+
+
 void loop() {
   handleAudio();
   //handleVibro();
@@ -92,6 +98,15 @@ void loop() {
         else if (c == 'v' || c == 'V') selectNow = LOW;
     }
   
+    int updaterot = rSwitch.update();
+    if(updaterot ==1 || updaterot ==-1){
+        change_screen(updaterot);
+    }
+
+
+    rSwitch.updateEncoder(encoder, upNow,downNow);
+
+
   if(upPrev == HIGH && upNow == LOW){
       current_up();
       vibrate();
@@ -107,9 +122,10 @@ void loop() {
       vibrate();
       //playSound("/switch_opt.wav");
   }
+
+
   upPrev = upNow;
   downPrev = downNow;
   selectPrev = selectNow;
   delay(10);
 }
-

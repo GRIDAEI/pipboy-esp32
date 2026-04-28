@@ -10,7 +10,7 @@ LGFX::LGFX(void) {
     cfg.spi_mode = 0;
     cfg.freq_write = 40000000;
     cfg.pin_sclk = 18;
-    cfg.pin_mosi = 12;
+    cfg.pin_mosi = 11;
     cfg.pin_miso = 19;
     cfg.pin_dc   = 13;
     _bus_instance.config(cfg);

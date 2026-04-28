@@ -2,6 +2,9 @@
 #include <functional>
 #include "stats/status.h"
 #include "stats/special.h"
+#include "stats/cechy.h"
+#include "stats/skille.h"
+#include "stats/relacje.h"
 struct AppScreen{
     std::function<void()> drawFunction;
     std::function<void()> up;

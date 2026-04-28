@@ -39,7 +39,7 @@ private:
     Screen action_pool;
     char playerName[9]; // 8 liter + znak końca stringa '\0'
     int name_char_idx;  // Indeks aktualnie edytowanej litery (0-7)
-    static const int SETTINGS_COUNT = 4;
+    static const int SETTINGS_COUNT = 7;
     Setting settings[SETTINGS_COUNT];
 
     // Prywatne metody rysujące
