@@ -1,0 +1,5 @@
+To jest napisany przeze mnie skrypt do pythona co wygeneruje ci plik .h z każdego obrazu
+jaki masz.
+
+Przeciągnij twój plik na plik .bat i dostaniesz odpowiednik w pliku nagłówkowym. Daj go do
+src/imgs i w pliku w którym chcesz go użyć zrób #include "../imgs/obrazek.h"

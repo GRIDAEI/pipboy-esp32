@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "author": "Twój Zespół",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-s3-devkitc-1",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ili9341",
+      "id": "tft",
+      "top": -80,
+      "left": 200,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-ky-040",
+      "id": "encoder",
+      "top": 150,
+      "left": 150,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-potentiometer",
+      "id": "rotSwitch",
+      "top": 150,
+      "left": -50,
+      "attrs": {}
+    }
+  ],
+  "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []],
+    ["esp:GND", "tft:GND", "black", ["v0"]],
+    ["esp:3V3", "tft:VCC", "red", ["v0"]],
+    ["esp:3V3", "tft:LED", "red", ["v0"]],
+    ["esp:15", "tft:CS", "blue", ["v0"]],
+    ["esp:13", "tft:DC", "green", ["v0"]],
+    ["esp:4", "tft:RST", "orange", ["v0"]],
+    ["esp:11", "tft:MOSI", "yellow", ["v0"]],
+    ["esp:18", "tft:SCK", "purple", ["v0"]],
+
+    ["esp:1", "encoder:CLK", "yellow", ["v0"]],
+    ["esp:2", "encoder:DT", "green", ["v0"]],
+    ["esp:5", "encoder:SW", "blue", ["v0"]],
+    ["esp:GND", "encoder:GND", "black", ["v0"]],
+    ["esp:3V3", "encoder:VCC", "red", ["v0"]],
+
+    ["esp:9", "rotSwitch:SIG", "purple", ["v0"]],
+    ["esp:3V3", "rotSwitch:VCC", "red", ["v0"]],
+    ["esp:GND", "rotSwitch:GND", "black", ["v0"]]
+  ],
+  "dependencies": {}
+}

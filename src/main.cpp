@@ -59,10 +59,12 @@ void setup() {
   digitalWrite(vibr_pin, LOW);
 
   if (!LittleFS.begin()) {
-    Serial.println("LittleFS mount failed!");
-    return;
+    Serial.println("LittleFS mount failed! (działam bez obrazków)");
+    // return; <--- USUWAMY TO! Nie pozwalamy mu się zabić!
+  } else {
+    // Wczytujemy sprite'y TYLKO wtedy, gdy LittleFS działa
+    load_all_sprites(); 
   }
-  load_all_sprites();
   ESP32Encoder::useInternalWeakPullResistors = puType::up;
   encoder.attachHalfQuad(1, 2);
   encoder.setCount(0);
@@ -104,7 +106,7 @@ void loop() {
     }
 
 
-    rSwitch.updateEncoder(encoder, upNow,downNow);
+    //rSwitch.updateEncoder(encoder, upNow,downNow);
 
 
   if(upPrev == HIGH && upNow == LOW){
@@ -114,6 +116,7 @@ void loop() {
   }
   if(downPrev == HIGH && downNow == LOW){
       current_down();
+      
       vibrate();
       //playSound("/switch_opt.wav");
   }
