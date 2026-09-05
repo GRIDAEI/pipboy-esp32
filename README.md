@@ -18,26 +18,25 @@ Projekt ma na celu jak najdokładniejsze odtworzenie kultowego urządzenia z ser
 - **Motywy Kolorystyczne**: Obsługa różnych kolorów interfejsu (Klasyczny Zielony, Bursztynowy, Quantum Blue).
 - **Oszczędzanie Energii**: Inteligentne wykrywanie bezczynności obniża taktowanie procesora do 80MHz, by oszczędzać baterię podczas długich wędrówek po Pustkowiach.
 
-## Hardware
+## Gotowe Płytki PCB
 
-Projekt jest zintegrowany z dedykowaną elektroniką. Główne komponenty użyte w schemacie:
+W projekcie zawarto pliki produkcyjne dla autorskich płytek drukowanych (PCB). Dostępne są **2 wersje** płytki, z czego **najnowsza rewizja v3.0 jest wysoce zalecana** ze względu na znaczne poprawki stabilności układu.
 
-- **Mikrokontroler**: ESP32-S3-DEVKITC-1-N16R8 (Projekt był robiony na tej wersji, **MOŻE** działa na N8R2).
-- **Wyświetlacz**: Wyświetlacz TFT ST7796 na magistrali SPI.
-- **Pamięć Zewnętrzna**: Moduł czytnika kart Micro SD.
-- **Audio**: Moduł DAC I2S MAX98357A.
-- **Sterowanie (Wejścia)**:
-  - 1x Enkoder Obrotowy (z przyciskiem - złącze ROTENCODER).
-  - Fizyczne przyciski przednie (Front Buttons) i diody LED (FNTBTN, FNTLED).
-  - Przełącznik Pozycyjny (PosSwitch).
-- **Haptyka**: 2x Silniki wibracyjne sterowane tranzystorami MOSFET dla realistycznego sprzężenia zwrotnego.
+## Dokumentacja Projektu
 
-## Struktura Projektu
+Szczegółowe informacje techniczne oraz instrukcje zostały wydzielone do osobnych plików, aby ułatwić nawigację po repozytorium:
+
+- **[Sprzęt i Elektronika (Hardware)](docs/HARDWARE.md)** – schemat układu, kompletna lista komponentów (BOM), tabela podłączeń pinów oraz informacje o zastosowanych modułach (wibracje, DAC).
+- **[Architektura Oprogramowania (Software)](docs/SOFTWARE.md)** – objaśnienie działania interfejsu wizualnego (LovyanGFX), buforowanie tekstur w PSRAM, obsługa przerwań enkodera oraz zarządzanie dźwiękiem z LittleFS.
+- **[Instrukcja Budowy (Build Guide)](docs/BUILD_GUIDE.md)** – przewodnik krok po kroku, jak skompilować projekt, skonfigurować środowisko PlatformIO i wgrać wymagany obraz pamięci Flash.
+
+## 📁 Struktura Projektu
 
 - `/src/screens/` - Logika odpowiedzialna za poszczególne zakładki interfejsu (Status, S.P.E.C.I.A.L, Ekwipunek, Mapy).
-- `/src/modules/` - Obsługa modułów takich jak Audio (I2S), Enkoder i karta SD.
-- `/src/imgs/` - Sprite'y i tablice z grafikami.
-- `main.cpp` - Główna pętla programu, sekwencja startowa i obsługa wejść.
+- `/src/modules/` - Sterowniki modułów takich jak Audio (I2S), Enkoder i obsługa karty SD.
+- `/src/imgs/` - Tekstury, sprite'y i tablice z grafikami przygotowanymi do użycia.
+- `/docs/` - Rozszerzona dokumentacja techniczna projektu.
+- `main.cpp` - Główna pętla programu, sekwencja startowa (Boot OS) i dystrybucja wejść.
 
 ## Licencja
 

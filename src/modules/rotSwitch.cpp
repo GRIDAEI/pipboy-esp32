@@ -6,26 +6,24 @@ RotSwitch::RotSwitch(int pin) {
 
 // NOWA FUNKCJA: Tłumaczy odczyt ADC na pozycję 0-4 (lub -1 w razie błędu)
 int RotSwitch::getSwitchPosition(int adcValue) {
-    // Szerokie "okna", żeby wychwycić lekko pływające napięcie
-        // Pozycja 0: ~0V
+    // Pozycja 0: ~0V (odczyty to równe 0)
     if (adcValue < 400) {
         return 0;
     }
-    // Pozycja 1: Twój odczyt to ok. 1650-1700
-    else if (adcValue >= 780 && adcValue <= 820) {
+    // Pozycja 1: odczyty ok. 750-920
+    else if (adcValue >= 700 && adcValue <= 1000) {
         return 1;
     }
-    // Pozycja 2: Twój odczyt to ok. 2600
-    else if (adcValue >= 1670 && adcValue <= 1750) {
+    // Pozycja 2: odczyty ok. 1600-1660
+    else if (adcValue >= 1500 && adcValue <= 1800) {
         return 2;
     }
-    // Pozycja 3: TUTAJ STRZELAM (zakładam ok. 3300-3400). 
-    // Jeśli nie łapie, sprawdź w Serial Monitorze, jaką wartość wypluwa na 4. nóżce.
-    else if (adcValue >= 2580 && adcValue <= 2700) {
+    // Pozycja 3: odczyty ok. 2470-2720
+    else if (adcValue >= 2400 && adcValue <= 2800) {
         return 3;
     }
-    // Pozycja 4: Twój odczyt to ok. 4070
-    else if (adcValue > 4000) {
+    // Pozycja 4: odczyty ok. 3990-4060
+    else if (adcValue >= 3800) {
         return 4;
     }
 
@@ -35,6 +33,14 @@ int RotSwitch::getSwitchPosition(int adcValue) {
 
 int RotSwitch::update() {
     int adcValue = analogRead(analogPin);
+    
+    static unsigned long lastPrint = 0;
+    if (millis() - lastPrint > 500) {
+        Serial.print("rSwitch ADC: ");
+        Serial.println(adcValue);
+        lastPrint = millis();
+    }
+
     int currentPosition = getSwitchPosition(adcValue);
 
     // 1. ODRZUCENIE BŁĘDÓW: Odczyt nie trafia w żadne "okno"

@@ -256,6 +256,7 @@ if (millis() - lastPrint > 500) {
     }
     int newPos = rSwitch.update();
     if (newPos != -1) {
+        playSound("/deck_ui_side_menu_fly_in.wav");
         set_screen(newPos);
     }
     
